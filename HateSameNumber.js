@@ -33,7 +33,7 @@ class Queue {
 function solution(arr) {
     var answer = [];
 
-    que = new Queue();
+    var que = new Queue();
 
     que.add(arr[0]);
 

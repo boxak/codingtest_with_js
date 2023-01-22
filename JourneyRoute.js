@@ -1,4 +1,4 @@
-var result = [];
+let result = [];
 var answer = [];
 var flag = false;
 
