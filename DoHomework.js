@@ -2,7 +2,6 @@ function solution(plans) {
   var answer = [];
   var stack = [];
 
-  var doingJob = false;
   var obj = {};
   var index = 0;
 
@@ -18,7 +17,10 @@ function solution(plans) {
     return plan1[1] - plan2[1];
   });
 
-  for (var i = 0; i < 24 * 60; i++) {
+  var i = 0;
+
+  while(plans.length > answer.length) {
+    i++;
     if (obj.playtime === 0) {
       answer.push(obj.name);
       obj = {};
