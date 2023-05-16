@@ -20,7 +20,7 @@ function solution(plans) {
   var i = 0;
 
   while(plans.length > answer.length) {
-    i++;
+
     if (obj.playtime === 0) {
       answer.push(obj.name);
       obj = {};
@@ -59,6 +59,8 @@ function solution(plans) {
     if (obj.playtime) {
       obj.playtime--;
     }
+
+    i++;
   }
 
   return answer;
@@ -70,11 +72,11 @@ function setObj(obj, plan) {
 }
 
 var params = [
-  ["korean", "11:40", "1"],
-  ["english", "11:41", "10"],
-  ["math", "11:51", "10"],
-  ["science", "11:56", "5"],
-  ["physics", "12:01", "10"]
+  ["1", "00:00", "100"], 
+  ["2", "01:38", "10"], 
+  ["3", "01:49", "10"],
+  ["4", "01:59", "10"],
+  ["5", "02:10", "10"]
 ];
 
 // korean, english, science, physisc, math
