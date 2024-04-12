@@ -1,56 +1,65 @@
 class Queue {
   constructor() {
-      this.arr = [];
-      this.front = 0;
-      this.end = 0;
-  }
-  
-  add(element) {
-      this.arr[this.end++] = element;
-  }
-  
-  pop() {
-      this.front++;
-  }
-  
-  head() {
-      return this.arr[this.front];
+    this.array = [];
+    this.head = 0;
+    this.tail = 0;
   }
 
-  tail() {
-    return this.arr[this.end-1];
+  add(element) {
+    if (!this.array) {
+      return;
+    }
+
+    this.array.push(element);
+    this.head++;
   }
-  
-  size() {
-      return this.end - this.front;
+
+  pop() {
+    if (this.isEmpty()) {
+      return;
+    }
+
+    this.tail++;
   }
-  
-  getArray() {
-      return this.arr.slice(this.front, this.end);
+
+  getHead() {
+    if (!this.isEmpty()) {
+      return undefined;
+    }
+
+    return this.array[this.head];
+  }
+
+  getTail() {
+    if (!this.isEmpty()) {
+      return undefined;
+    }
+
+    return this.array[this.tail];
+  }
+
+  isEmpty() {
+    return !this.array || this.head === this.tail;
   }
 }
 
 function solution(arr) {
-    var answer = [];
+  var que = new Queue();
+  var array = [];
 
-    var que = new Queue();
+  for (let i = 0; i < arr.length; i++) {
+    if (que.isEmpty()) {
+      que.add(arr[i]);
+      array.push(arr[i]);
+    } else {
+      let head = que.getHead();
 
-    que.add(arr[0]);
-
-    for (let i = 1;i<arr.length;i++) {
-      const number = arr[i];
-      if (number !== que.tail()) {
-        que.add(number);
+      if (head !== arr[i]) {
+        que.add(arr[i]);
+        array.push(arr[i]);
       }
     }
-    
-    while(que.size() > 0) {
-      answer.push(que.head());
-      que.pop();
-    }
+  }
 
-    return answer;
+  return array;
 }
-
-var answer = solution([1,1,3,3,0,1,1]);
-console.log(answer);
