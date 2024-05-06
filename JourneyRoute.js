@@ -1,71 +1,85 @@
-let result = [];
-var answer = [];
-var flag = false;
+let temp_course = [];
+let course = [];
+let finish = false;
 
 function solution(tickets) {
+  var answer = [];
 
-  var ticketData = {};
+  var graph = {};
+  var numOfTicket = tickets.length;
 
-  tickets.sort(function(t1, t2) {
-    const s1 = t1[0];
-    const e1 = t1[1];
-    const s2 = t2[0];
-    const e2 = t2[1];
+  tickets.forEach((ticket) => {
+    const port1 = ticket[0];
+    const port2 = ticket[1];
 
-    if (s1 === s2) {
-      return e1 < e2 ? -1 : 1;
-    } else return s1 > s2 ? -1 : 1;
-  });
+    if (graph[port1] === undefined) {
+      graph[port1] = [];
+    }
 
-  tickets.forEach(ticket => {
-    const departure = ticket[0];
-    const destination = ticket[1];
-
-    if (!ticketData[departure]) {
-      ticketData[departure] = [];
-    } 
-    
-    ticketData[departure].push({
-      "to" : destination,
-      "use" : false
+    graph[port1].push({
+      to : port2,
+      used : false
     });
-    
+
   });
 
-  result.push("ICN");
-  dfs(ticketData, "ICN", tickets.length, 0);
+  Object.keys(graph).forEach((key) => {
+    graph[key].sort((a, b) => {
+      const p1 = a.to;
+      const p2 = b.to;
+
+      if (p1 > p2) {
+        return 1;
+      } else if (p1 < p2) {
+        return -1;
+      }
+      return 0;
+    });
+  });
+
+  dfs(graph, "ICN", 0, numOfTicket);
+
+  answer = course;
 
   return answer;
 }
 
-function dfs(ticketData, airport, ticketCount, useCount) {
-  if (flag) {
+function dfs(graph, port, usedCount, numOfTicket) {
+
+  if (finish === true) {
     return;
   }
-  if (useCount === ticketCount) {
-    result.forEach(element => {
-      answer.push(element);
+
+  temp_course.push(port);
+  
+  if (usedCount === numOfTicket) {
+    temp_course.forEach((element) => {
+      course.push(element);
     });
-    flag = true;
+    finish = true;
     return;
   }
 
-  var arr = ticketData[airport];
-  if (arr !== undefined && arr !== []) {
-    for (var i = 0;i<arr.length;i++) {
-      var next = arr[i].to;
-      var use = arr[i].use;
+  const array = graph[port];
 
-      if (use === false) {
-        result.push(next);
-        ticketData[airport][i].use = true;
-        dfs(ticketData, next, ticketCount, useCount+1);
-        result.pop();
-        ticketData[airport][i].use = false;
+  if (array) {
+
+    for (let i = 0;i<array.length; i++) {
+      const ticketInfo = array[i];
+
+      const nextPort = ticketInfo.to;
+      const used = ticketInfo.used;
+
+      if (used === false) {
+        ticketInfo.used = true;
+        dfs(graph, nextPort, usedCount + 1, numOfTicket);
+        ticketInfo.used = false;
       }
     }
   }
-}
 
-var list = solution([["ICN", "SFO"], ["ICN", "ATL"], ["SFO", "ATL"], ["ATL", "ICN"], ["ATL","SFO"], ["SFO", "ICN"], ["ICN", "SFO"]]);
-console.log(list);
+  if (temp_course.length > 0) {
+    temp_course.pop();
+  }
+
+}
