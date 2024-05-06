@@ -1,3 +1,6 @@
+let preOrder = [];
+let postOrder = [];
+
 class Node {
   constructor(idx, x, y) {
     this.idx = idx;
@@ -11,7 +14,7 @@ class Node {
 }
 
 function solution(nodeinfo) {
-  var answer = [[]];
+  var answer = [];
 
   var nodeList = [];
 
@@ -77,11 +80,62 @@ function solution(nodeinfo) {
     }
   }
 
-  
+  let rootNode = null;
+
+  nodeList.forEach((node) => {
+    if (node.parent === null) {
+      rootNode = node.idx;
+      return;
+    }
+  });
+
+  nodeList.sort((a, b) => {
+    if (a.idx > b.idx) {
+      return 1;
+    } else if (a.idx < b.idx) {
+      return -1;
+    }
+
+    return 0;
+  });
+
+  preOrderVisit(nodeList, rootNode);
+  postOrderVisit(nodeList, rootNode);
+
+  answer.push(preOrder);
+  answer.push(postOrder);
 
   return answer;
 }
 
+function preOrderVisit(nodeList, nodeIdx) {
+  preOrder.push(nodeIdx);
+  
+  const nodeData = nodeList[nodeIdx-1];
+
+  if (nodeData.left) {
+    preOrderVisit(nodeList, nodeData.left);
+  }
+
+  if (nodeData.right) {
+    preOrderVisit(nodeList, nodeData.right);
+  }
+}
+
+function postOrderVisit(nodeList, nodeIdx) {
+  const nodeData = nodeList[nodeIdx - 1];
+
+  if (nodeData.left) {
+    postOrderVisit(nodeList, nodeData.left);
+  }
+
+  if (nodeData.right) {
+    postOrderVisit(nodeList, nodeData.right);
+  }
+
+  postOrder.push(nodeIdx);
+}
+
 var array = [[5,3],[11,5],[13,3],[3,5],[6,1],[1,3],[8,6],[7,2],[2,2]];
 
-solution(array);
+solution(array);3

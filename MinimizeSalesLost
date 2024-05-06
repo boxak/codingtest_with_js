@@ -1,0 +1,22 @@
+class Staff {
+  constructor(id, sale) {
+    this.id = id;
+    this.sale = sale;
+
+    this.team = null;
+    this.leader = null;
+  }
+}
+
+function solution(sales, links) {
+    var answer = 0;
+
+    var staffInfoList = [];
+
+    for (let i = 0;i<sales.length; i++) {
+      const id = i + 1;
+      staffInfoList.push(new Staff(id, sales[i]));
+    }
+
+    return answer;
+}
