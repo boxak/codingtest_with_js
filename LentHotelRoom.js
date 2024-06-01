@@ -1,21 +1,38 @@
+function makeSortedBookInfoOnMinuteUnit(book_time) {
+  var sorted = [];
+
+  function convertHHmmToMinute(time) {
+    const [hour, min] = time.split(":").map((str) => parseInt(str));
+
+    return hour * 60 + min;
+  }
+
+  return function () {
+    book_time.forEach((book) => {
+      // var start =
+      //   60 * parseInt(book[0].split(":")[0]) + parseInt(book[0].split(":")[1]);
+      // var end =
+      //   60 * parseInt(book[1].split(":")[0]) + parseInt(book[1].split(":")[1]);
+
+      const [start, end] = book.map((time) => convertHHmmToMinute(time));
+
+      sorted.push({
+        start: start,
+        end: end,
+      });
+    });
+
+    sorted.sort((a, b) => a.start - b.start);
+
+    return sorted;
+  };
+}
+
 function solution(book_time) {
   var answer = 0;
-  var sorted = [];
   var lentals = [];
 
-  book_time.forEach((book) => {
-    var start =
-      60 * parseInt(book[0].split(":")[0]) + parseInt(book[0].split(":")[1]);
-    var end =
-      60 * parseInt(book[1].split(":")[0]) + parseInt(book[1].split(":")[1]);
-
-    sorted.push({
-      start: start,
-      end: end,
-    });
-  });
-
-  sorted.sort((a, b) => a.start - b.start);
+  var sorted = makeSortedBookInfoOnMinuteUnit(book_time)();
 
   answer = 1;
 
