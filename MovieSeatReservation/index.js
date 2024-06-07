@@ -45,7 +45,7 @@ function passwordValidationCheck(pw) {
     message: "",
   };
 
-  const regex = /[((A-Z)|(a-z))+(0-9)+(!|@|\~)]/;
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@~])[A-Za-z\d!@~]{8,20}$/;
 
   if (pw.length < 7 || pw.length > 20) {
     returnObj.result = "FAIL";
@@ -78,35 +78,171 @@ const handicapSeatDomArray = Array.from(seatDomArray).filter((dom) =>
 
 const handicapDom = document.getElementById("checkHandicap");
 
+const remainCountDom = document.getElementById("remainSeatCnt");
+const amountDom = document.getElementById("amount");
+
+document.getElementById("reselect").addEventListener("click", function () {
+  if (window.confirm("선택하신 좌석을 모두 취소하고 다시 선택하시겠습니까?")) {
+    selectionMap.init();
+    seatMap.init();
+  }
+});
+
+const generalFee = 10000;
+const youthFee = 7000;
+const handicapFee = 5000;
+const mussDiscount = 0.2;
+
+const wholeSeatCount = 39;
+
 let seatSelectedCount = 0;
 let normalSeatSelectedCount = 0;
 let mussSeatSelectedCount = 0;
 let handicapSeatSelectedCount = 0;
-let totalCount = 0;
+// let totalCount = 0;
 let generalCount = 0;
 let youthCount = 0;
 
-function initPeopleSelection() {
-  generalBtnDomArray[0].className = generalBtnDomArray[0].className + " toggle";
-  youthBtnDomArray[0].className = youthBtnDomArray[0].className + " toggle";
-  checkHandicap.disabled = true;
-}
+let selectionMap = {
+  general: {
+    count: 0,
+    domArray: generalBtnDomArray,
+  },
+  youth: {
+    count: 0,
+    domArray: youthBtnDomArray,
+  },
 
-function initSeatSelection() {
-  seatDomArray.forEach((dom) => {
-    if (dom.className.includes("musseukbox")) {
-      dom.className = "seat musseukbox";
-    } else if (dom.className.includes("handicap")) {
-      dom.className = "seat handicap";
-    } else {
-      dom.className = "seat";
+  getTotalCount: function () {
+    return this.general.count + this.youth.count;
+  },
+
+  init: function () {
+    generalBtnDomArray.forEach((dom) => {
+      dom.className = dom.className.replace(" toggle", "");
+    });
+    youthBtnDomArray.forEach((dom) => {
+      dom.className = dom.className.replace(" toggle", "");
+    });
+    generalBtnDomArray[0].className =
+      generalBtnDomArray[0].className + " toggle";
+    youthBtnDomArray[0].className = youthBtnDomArray[0].className + " toggle";
+    checkHandicap.disabled = true;
+  },
+
+  update: function (type, count) {
+    this[type].count = count;
+
+    if (!handicapDom.checked) {
+      const discount = seatMap.count.muss > 0 ? 0.8 : 1;
+      const seatSelectedCount = seatMap.getTotalCount();
+      console.log(seatSelectedCount, this.general.count);
+      if (seatSelectedCount > this.general.count) {
+        amountDom.textContent =
+          discount *
+          (this.general.count * generalFee +
+            (seatSelectedCount - this.general.count) * youthFee);
+      } else {
+        amountDom.textContent = discount * seatSelectedCount * generalFee;
+      }
     }
-    seatSelectedCount = 0;
-    normalSeatSelectedCount = 0;
-    mussSeatSelectedCount = 0;
-    handicapSeatSelectedCount = 0;
-  });
-}
+  },
+};
+
+let seatMap = {
+  domArray: {
+    normal: normalDomArray,
+    muss: mussDomArray,
+    handicap: handicapSeatDomArray,
+  },
+  count: {
+    normal: 0,
+    muss: 0,
+    handicap: 0,
+  },
+  init: function () {
+    const disabled = selectionMap.getTotalCount() === 0 ? " disabled" : "";
+    seatDomArray.forEach((dom) => {
+      if (dom.className.includes("musseukbox")) {
+        dom.className = "seat musseukbox" + disabled;
+      } else if (dom.className.includes("handicap")) {
+        dom.className = "seat handicap" + disabled;
+      } else {
+        dom.className = "seat" + disabled;
+      }
+    });
+
+    this.count.normal = 0;
+    this.count.muss = 0;
+    this.count.handicap = 0;
+    remainCountDom.textContent = 0;
+    amountDom.textContent = 0;
+  },
+  getTotalCount: function () {
+    return this.count.normal + this.count.muss + this.count.handicap;
+  },
+  getOtherDomArray: function (type) {
+    const keys = Object.keys(this.domArray).filter((v) => v !== type);
+
+    return keys.map((v) => this.domArray[v]);
+  },
+  increase: function (type) {
+    this.count[type]++;
+    remainCountDom.textContent = wholeSeatCount - this.getTotalCount();
+
+    const amount = parseInt(amountDom.textContent);
+
+    if (type === "handicap") {
+      amountDom.textContent = amount + handicapFee;
+    } else {
+      const discount = type === "muss" ? 0.8 : 1;
+
+      if (this.getTotalCount() <= selectionMap.general.count) {
+        amountDom.textContent = amount + generalFee * discount;
+      } else {
+        amountDom.textContent = amount + youthFee * discount;
+      }
+    }
+  },
+  decrease: function (type) {
+    this.count[type]--;
+    remainCountDom.textContent = wholeSeatCount - this.getTotalCount();
+
+    const amount = parseInt(amountDom.textContent);
+
+    if (type === "handicap") {
+      amountDom.textContent = amount - handicapFee;
+    } else {
+      const discount = type === "muss" ? 0.8 : 1;
+
+      if (this.getTotalCount() >= selectionMap.general.count) {
+        amountDom.textContent = amount - youthFee * discount;
+      } else {
+        amountDom.textContent = amount - generalFee * discount;
+      }
+    }
+  },
+  makeDomArrayDisabled: function (type) {
+    this.domArray[type].forEach((dom) => {
+      makeDisabled(dom);
+    });
+  },
+  makeDomArrayActivate: function (type) {
+    const otherTypes = ["normal", "muss", "handicap"].filter((v) => v !== type);
+
+    if (otherTypes.filter((v) => v !== type && this.count[v] > 0).length > 0) {
+      return;
+    }
+
+    this.domArray[type].forEach((dom) => {
+      removeDisabled(dom);
+    });
+
+    otherTypes.forEach((otherType) => {
+      this.makeDomArrayDisabled(otherType);
+    });
+  },
+};
 
 function removeDisabled(dom) {
   dom.className = dom.className.replace(" disabled", "");
@@ -128,21 +264,7 @@ function makeClicked(dom) {
   }
 }
 
-function onClickCountBtn(count, type) {
-  // 먼저 해당 dom 을 활성화시키고
-  // 다른 dom을 비활성화시킨 다음
-  // 좌석들을 활성화시킨다.
-
-  const domArray = type === "general" ? generalBtnDomArray : youthBtnDomArray;
-  domArray[count].className = domArray[count].className + " toggle";
-
-  for (let i = 0; i < domArray.length; i++) {
-    if (i === count) continue;
-    domArray[i].className.replace(" toggle", "");
-  }
-}
-
-initPeopleSelection();
+selectionMap.init();
 
 // 먼저 해당 dom 을 활성화시키고
 // 다른 dom을 비활성화시킨 다음
@@ -151,25 +273,26 @@ for (let i = 0; i < btnDomArray.length; i++) {
   btnDomArray[i].addEventListener("click", function (event) {
     const className = event.target.className;
     const count = parseInt(event.target.textContent);
+    const type = className.includes("general") ? "general" : "youth";
+    if (
+      selectionMap[className.includes("general") ? "youth" : "general"].count +
+        count <
+        seatMap.getTotalCount() &&
+      seatMap.getTotalCount() > 0
+    ) {
+      window.alert("선택하신 좌석을 모두 취소하고 다시 선택하시겠습니까?");
 
-    generalCount = className.includes("general")
-      ? count
-      : [...generalBtnDomArray].findIndex((dom) =>
-          dom.className.includes("toggle")
-        );
-    youthCount = className.includes("youth")
-      ? count
-      : [...youthBtnDomArray].findIndex((dom) =>
-          dom.className.includes("toggle")
-        );
+      selectionMap.update(type, count);
+      seatMap.init();
+    }
 
-    totalCount = generalCount + youthCount;
+    selectionMap.update(type, count);
 
     // 장애인 체크 여부
     if (
-      generalCount >= 4 ||
-      youthCount >= 4 ||
-      generalCount + youthCount >= 4
+      selectionMap.general.count >= 4 ||
+      selectionMap.youth.count >= 4 ||
+      selectionMap.getTotalCount() >= 4
     ) {
       if (handicapDom.checked) {
         window.alert(
@@ -178,7 +301,7 @@ for (let i = 0; i < btnDomArray.length; i++) {
         return;
       }
       handicapDom.disabled = true;
-    } else if (generalCount + youthCount >= 1) {
+    } else if (selectionMap.getTotalCount() >= 1) {
       handicapDom.disabled = false;
     }
 
@@ -201,252 +324,115 @@ for (let i = 0; i < btnDomArray.length; i++) {
       }
     }
 
-    if (seatSelectedCount === 0) {
+    if (seatMap.getTotalCount() === 0 && selectionMap.getTotalCount() > 0) {
       seatDomArray.forEach((dom) => {
-        if (generalCount !== 0 || youthCount !== 0) {
-          removeDisabled(dom);
-        } else {
-          makeDisabled(dom);
-        }
+        removeDisabled(dom);
       });
-    }
+    } else {
+      if (seatMap.getTotalCount() === selectionMap.getTotalCount()) {
+        seatDomArray.forEach((dom) => {
+          if (!dom.className.includes("clicked")) {
+            makeDisabled(dom);
+          }
+        });
+      } else {
+        ["normal", "muss", "handicap"].forEach((seatType) => {
+          const selectedCount = seatMap.count[seatType];
 
-    if (normalSeatSelectedCount > 0) {
-      if (seatSelectedCount < totalCount) {
-        normalDomArray.forEach((dom) => {
-          removeDisabled(dom);
+          if (selectedCount > 0) {
+            seatMap.makeDomArrayActivate(seatType);
+          }
         });
       }
-
-      mussDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      handicapSeatDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      handicapDom.disabled = true;
-    }
-
-    if (mussSeatSelectedCount > 0) {
-      normalDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      handicapSeatDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      handicapDom.disabled = true;
-    }
-
-    if (handicapSeatSelectedCount > 0) {
-      normalDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      mussDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
     }
   });
 }
 
 handicapDom.addEventListener("click", function (event) {
-  if (event.target.checked) {
+  if (!event.target.checked) {
     let isReturn = false;
 
     handicapSeatDomArray.forEach((dom) => {
       const className = dom.className;
       if (className.includes("clicked")) {
         window.alert("선택하신 좌석을 모두 취소하고 다시 선택하시겠습니까?");
-        initSeatSelection();
+        seatMap.init();
         isReturn = true;
         return;
       }
     });
 
-    if (!isReturn) {
-      normalDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-
-      mussDomArray.forEach((dom) => {
-        makeDisabled(dom);
-      });
-    }
+    seatMap.init();
   } else {
-    initSeatSelection();
+    normalDomArray.forEach((dom) => {
+      makeDisabled(dom);
+    });
+
+    mussDomArray.forEach((dom) => {
+      makeDisabled(dom);
+    });
   }
 });
 
-normalDomArray.forEach((normalDom) => {
-  normalDom.addEventListener("click", function (event) {
-    const className = event.target.className;
-    if (className.includes("disabled")) return;
-    const checked = className.includes("clicked");
-
-    if (!checked) {
-      makeClicked(event.target);
-      normalSeatSelectedCount++;
-      seatSelectedCount++;
-    } else {
-      removeClicked(event.target);
-      normalSeatSelectedCount--;
-      seatSelectedCount--;
-    }
-
-    if (seatSelectedCount === totalCount) {
-      seatDomArray.forEach((dom) => {
-        if (!dom.className.includes("clicked")) {
-          makeDisabled(dom);
-        }
-      });
-    } else {
-      normalDomArray.forEach((dom) => {
-        removeDisabled(dom);
-      });
-
-      mussDomArray.forEach((dom) => {
-        if (normalSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (normalSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
-      });
-
-      handicapSeatDomArray.forEach((dom) => {
-        if (normalSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (normalSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
-      });
-    }
-
-    if (normalSeatSelectedCount > 0) {
-      handicapDom.disabled = true;
-    } else if (normalSeatSelectedCount === 0) {
-      handicapDom.disabled = false;
-    }
-  });
-});
-
-mussDomArray.forEach((mussDom) => {
-  mussDom.addEventListener("click", function (event) {
-    const className = event.target.className;
-    if (className.includes("disabled")) return;
-
-    if (
-      totalCount % 2 === 1 ||
-      generalCount % 2 === 1 ||
-      youthCount % 2 === 1
-    ) {
-      window.alert(
-        "선택하신 ‘MUSSEUKBOX’ 좌석은 2인 좌석입니다. 2인 단위로 인원을 선택해주세요."
-      );
-      return;
-    }
-
-    const checked = className.includes("clicked");
-
-    if (!checked) {
-      makeClicked(event.target);
-      mussSeatSelectedCount++;
-      seatSelectedCount++;
-    } else {
-      removeClicked(event.target);
-      mussSeatSelectedCount--;
-      seatSelectedCount--;
-    }
-
-    if (seatSelectedCount === totalCount) {
-      seatDomArray.forEach((dom) => {
-        if (!dom.className.includes("clicked")) {
-          makeDisabled(dom);
-        }
-      });
-    } else {
-      mussDomArray.forEach((dom) => {
-        removeDisabled(dom);
-      });
-
-      normalDomArray.forEach((dom) => {
-        if (mussSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (mussSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
-      });
-
-      handicapSeatDomArray.forEach((dom) => {
-        if (mussSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (mussSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
-      });
-    }
-
-    if (mussSeatSelectedCount > 0) {
-      handicapDom.disabled = true;
-    } else if (mussSeatSelectedCount === 0) {
-      handicapDom.disabled = false;
-    }
-  });
-});
-
-handicapSeatDomArray.forEach((dom) => {
+seatDomArray.forEach((dom) => {
   dom.addEventListener("click", function (event) {
     const className = event.target.className;
     if (className.includes("disabled")) return;
+    const checked = className.includes("clicked");
+    let type = null;
 
-    if (!handicapDom.checked) {
+    if (className.includes("musseukbox")) {
+      type = "muss";
+    } else if (className.includes("handicap")) {
+      type = "handicap";
+    } else {
+      type = "normal";
+    }
+
+    if (className.includes("disabled")) return;
+    if (type === "handicap" && !handicapDom.checked) {
       window.alert(
         "선택하신 좌석은 장애인석으로 일반고객은 예매할 수 없는 좌석입니다."
       );
       return;
     }
 
-    const checked = className.includes("clicked");
-
     if (!checked) {
       makeClicked(event.target);
-      handicapSeatSelectedCount++;
-      seatSelectedCount++;
+      seatMap.increase(type);
     } else {
       removeClicked(event.target);
-      handicapSeatSelectedCount--;
-      seatSelectedCount--;
+      seatMap.decrease(type);
     }
 
-    if (seatSelectedCount === totalCount) {
+    if (seatMap.getTotalCount() === selectionMap.getTotalCount()) {
       seatDomArray.forEach((dom) => {
         if (!dom.className.includes("clicked")) {
           makeDisabled(dom);
         }
       });
     } else {
-      handicapSeatDomArray.forEach((dom) => {
+      seatMap.domArray[type].forEach((dom) => {
         removeDisabled(dom);
       });
 
-      normalDomArray.forEach((dom) => {
-        if (handicapSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (handicapSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
+      seatMap.getOtherDomArray(type).forEach((otherDomArray) => {
+        otherDomArray.forEach((dom) => {
+          if (seatMap.count[type] > 0) {
+            makeDisabled(dom);
+          } else if (seatMap.count[type] === 0) {
+            removeDisabled(dom);
+          }
+        });
       });
+    }
 
-      mussDomArray.forEach((dom) => {
-        if (handicapSeatSelectedCount > 0) {
-          makeDisabled(dom);
-        } else if (handicapSeatSelectedCount === 0) {
-          removeDisabled(dom);
-        }
-      });
+    if (["normal", "muss"].includes(type)) {
+      if (seatMap.count[type] > 0) {
+        handicapDom.disabled = true;
+      } else if (seatMap.count[type] === 0) {
+        handicapDom.disabled = false;
+      }
     }
   });
 });
