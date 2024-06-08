@@ -176,7 +176,7 @@ let seatMap = {
     this.count.muss = 0;
     this.count.handicap = 0;
     remainCountDom.textContent = 0;
-    amountDom.textContent = 0;
+    amountDom.textContent = 0; //
   },
   getTotalCount: function () {
     return this.count.normal + this.count.muss + this.count.handicap;
