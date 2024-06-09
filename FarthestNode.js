@@ -1,4 +1,3 @@
-
 class Node {
   constructor(data) {
     this.data = data;
@@ -47,12 +46,12 @@ function solution(n, edge) {
   var answer = 0;
 
   let vector = [];
-  
-  for (let i = 0; i<=n; i++) {
+
+  for (let i = 0; i <= n; i++) {
     vector.push([]);
   }
 
-  for (let i = 0;i<edge.length;i++) {
+  for (let i = 0; i < edge.length; i++) {
     const a = edge[i][0];
     const b = edge[i][1];
 
@@ -67,13 +66,13 @@ function solution(n, edge) {
 
 function bfs(n, vector) {
   let que = new Queue();
-  let visited = new Array(n+1).fill(false);
-  let dist = new Array(n+1).fill(0);
+  let visited = new Array(n + 1).fill(false);
+  let dist = new Array(n + 1).fill(0);
 
   visited[1] = true;
   que.add([1, 0]);
 
-  while(!que.isEmpty()) {
+  while (!que.isEmpty()) {
     const node = que.peek();
 
     const idx = node[0];
@@ -83,20 +82,19 @@ function bfs(n, vector) {
 
     que.pop();
 
-    for (let i = 0;i<vector[idx].length; i++) {
+    for (let i = 0; i < vector[idx].length; i++) {
       const next = vector[idx][i];
 
       if (visited[next] === false) {
         visited[next] = true;
-        que.add([next, d+1]);
+        que.add([next, d + 1]);
       }
     }
-
   }
 
   let maxDist = -1;
 
-  for (let i = 0;i<dist.length;i++) {
+  for (let i = 0; i < dist.length; i++) {
     if (maxDist < dist[i]) {
       maxDist = dist[i];
     }
@@ -104,12 +102,11 @@ function bfs(n, vector) {
 
   let cnt = 0;
 
-  for (let i = 0;i<dist.length;i++) {
+  for (let i = 0; i < dist.length; i++) {
     if (dist[i] === maxDist) {
       cnt++;
     }
   }
 
-  return cnt;
-
+  return cnt; //ㅋㅋㅋ
 }
