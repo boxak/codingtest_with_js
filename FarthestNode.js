@@ -108,5 +108,5 @@ function bfs(n, vector) {
     }
   }
 
-  return cnt; //ㅋㅋㅋ
+  return cnt;
 }
