@@ -46,7 +46,7 @@
     // Ball 생성자의 프로토타입
     Ball.prototype = {
       // 속도(속력, 방향)을 임의로 설정
-      setVelocityAsRandom: function (vmin, vmax) {
+      setVelocityAsRandom: (vmin, vmax) => {
         var v = vmin + Math.random() * (vmax - vmin);
         var theta = 2 * Math.PI * Math.random();
 
@@ -57,7 +57,7 @@
       },
 
       // 색상을 임의로 설정
-      setColorAsRandom: function (lmin, lmax) {
+      setColorAsRandom: (lmin, lmax) => {
         var R = Math.floor(lmin + Math.random() * (lmax - lmin));
         var G = Math.floor(lmin + Math.random() * (lmax - lmin));
         var B = Math.floor(lmin + Math.random() * (lmax - lmin));
@@ -66,7 +66,7 @@
         return this;
       },
 
-      draw: function (ctx) {
+      draw: (ctx) => {
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, true);
@@ -75,13 +75,13 @@
         return this;
       },
 
-      move: function () {
+      move: () => {
         this.x += this.vx;
         this.y += this.vy;
         return this;
       },
 
-      collisionWall: function (wall) {
+      collisionWall: wall => {
         // 왼쪽 벽과 충돌할 때
         if (this.x - this.r < wall.left) {
           this.x = wall.left + this.r;
